@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    android:background="#000000"
+    >
+
+    <me.relex.photodraweeview.PhotoDraweeView
+        android:id="@+id/photoDraweeView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        fresco:placeholderImageScaleType="centerCrop"
+        fresco:progressBarImage="@mipmap/progress_bar"
+        fresco:progressBarImageScaleType="centerInside"
+        fresco:progressBarAutoRotateInterval="1000"
+        />
+
+
+    <ImageButton
+        android:id="@+id/ibBack"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
+        android:background="@null"
+        android:paddingLeft="15dp"
+        android:paddingRight="10dp"
+        android:scaleType="center"
+        android:src="@mipmap/back_white" />
+
+</RelativeLayout>
