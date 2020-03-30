@@ -23,6 +23,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.example.zealjiang.MyApplication;
 import com.example.zealjiang.bean.FileEntity;
+import com.example.zealjiang.fragment.DialogFragmentChangeSuffix;
 import com.example.zealjiang.util.FileUtil;
 import com.example.zealjiang.util.PermissionUtil;
 
@@ -75,7 +76,7 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
         mList = new ArrayList<>();
         sdRootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         currentFile = new File(sdRootPath);
-        Log.d("mtest"," sdRootPath: "+sdRootPath);
+        //Log.d("mtest"," sdRootPath: "+sdRootPath);
         initView();
 
         permissionUtil = new PermissionUtil();
@@ -169,6 +170,34 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
 
             }
         });
+
+        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+
+                final FileEntity entity = mList.get(position);
+                if(entity.getFileType() == FileEntity.Type.FLODER){
+                    aaa();
+                }
+                return true;
+            }
+        });
+    }
+
+    private void aaa(){
+        //提醒
+        final DialogFragmentChangeSuffix dialogFragmentChangeSuffix = DialogFragmentChangeSuffix.newInstance("");
+        dialogFragmentChangeSuffix.setCreditExchangeInf(new DialogFragmentChangeSuffix.CreditExchangeInf() {
+            @Override
+            public void exchange(boolean isNotify) {
+
+            }
+            @Override
+            public void cancel() {
+
+            }
+        });
+        dialogFragmentChangeSuffix.show(this.getSupportFragmentManager(),DialogFragmentChangeSuffix.class.getSimpleName());
     }
 
     private void getData(final String path) {
