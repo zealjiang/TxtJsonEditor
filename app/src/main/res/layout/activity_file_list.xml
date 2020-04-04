@@ -6,11 +6,11 @@
     >
 
 
-    <ListView
+    <com.example.zealjiang.HandleDataListView
         android:id="@+id/listView1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
-    </ListView>
+    </com.example.zealjiang.HandleDataListView>
 
     <ImageView
         android:id="@+id/ivHelp"

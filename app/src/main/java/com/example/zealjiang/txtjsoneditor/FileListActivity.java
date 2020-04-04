@@ -2,6 +2,7 @@ package com.example.zealjiang.txtjsoneditor;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
@@ -21,18 +22,20 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.zealjiang.HandleDataListView;
 import com.example.zealjiang.MyApplication;
 import com.example.zealjiang.bean.FileEntity;
 import com.example.zealjiang.fragment.DialogFragmentChangeSuffix;
 import com.example.zealjiang.util.FileUtil;
 import com.example.zealjiang.util.PermissionUtil;
+import com.example.zealjiang.util.log.XLog;
 
 import java.io.File;
 import java.util.ArrayList;
 
 public class FileListActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private ListView mListView;
+    private HandleDataListView mListView;
     private ImageView ivHelp;
     private MyFileAdapter mAdapter;
     private Context mContext;
@@ -43,6 +46,8 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
     private ArrayList<FileEntity> mList;
 
     private Handler mHandler;
+    private int selectItemPos = -1;
+    private ArrayList<String> selectPosList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,11 +59,60 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
                 super.handleMessage(msg);
                 switch (msg.what) {
                     case 1:
+
+                        selectItemPos = -1;
+                        boolean needRefresh = false;
                         if(mAdapter ==null){
                             mAdapter = new MyFileAdapter(mContext, mList);
                             mListView.setAdapter(mAdapter);
+
+                            mListView.setDataChangedListener(new HandleDataListView.DataChangedListener() {
+                                @Override
+                                public void onSuccess() {
+                                    XLog.debug("mtest","setDataChangedListener  selectItemPos: "+selectItemPos);
+                                    if(selectItemPos > 0){
+                                        mListView.setSelection(selectItemPos);
+                                    }
+                                }
+                            });
                         }else{
+                            needRefresh = true;
+                            XLog.debug("mtest","1 notifyDataSetChanged ");
                             mAdapter.notifyDataSetChanged();
+                            XLog.debug("mtest","2 notifyDataSetChanged ");
+                        }
+
+                        //选中上次选中的位置
+                        if((boolean)msg.obj && selectPosList.size() > 0){
+                            String pos_path = selectPosList.get(selectPosList.size() -1);
+                            if(!TextUtils.isEmpty(pos_path) && pos_path.contains("_")){
+                                String[] array = pos_path.split("_");
+                                String pos = array[0];
+                                String path = array[1];
+                                try{
+                                    int posInt = Integer.parseInt(pos);
+                                    if(mList.size() > posInt){
+                                        if(mList.get(posInt).getFilePath().equals(path)){
+                                            //mListView.smoothScrollToPosition(posInt);
+                                            //mListView.setSelection(selectItemPos);
+                                            selectItemPos = posInt;
+                                        }
+                                    }
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            if(selectPosList.size()>0){
+                                //删除刚退出的目录
+                                selectPosList.remove(selectPosList.size() -1);
+                            }
+                        }
+
+                        if(needRefresh){
+                            //XLog.debug("mtest","1 notifyDataSetChanged ");
+                            //mAdapter.notifyDataSetChanged();
+                            //XLog.debug("mtest","2 notifyDataSetChanged ");
                         }
 
                         break;
@@ -82,7 +136,7 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
         permissionUtil = new PermissionUtil();
         boolean boo = permissionUtil.checkPermission(this);
         if(boo){
-            getData(sdRootPath);
+            getData(sdRootPath,false);
         }
     }
 
@@ -91,7 +145,7 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
         if(permissionUtil == null)return;
         boolean boo = permissionUtil.onRequestPermissionsResult(requestCode,permissions,grantResults);
         if(boo){
-            getData(sdRootPath);
+            getData(sdRootPath,false);
         }else{
             permissionUtil.checkPermission(this);
         }
@@ -103,16 +157,17 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
         System.out.println("onBackPressed...");
         if(sdRootPath.equals(currentFile.getAbsolutePath())){
             System.out.println("已经到了根目录...");
+            selectPosList.clear();
             return ;
         }
 
         String parentPath = currentFile.getParent();
         currentFile = new File(parentPath);
-        getData(parentPath);
+        getData(parentPath,true);
     }
 
     private void initView() {
-        mListView = (ListView) findViewById(R.id.listView1);
+        mListView = findViewById(R.id.listView1);
         ivHelp = findViewById(R.id.ivHelp);
 
         ivHelp.setOnClickListener(new View.OnClickListener() {
@@ -130,7 +185,8 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
                 final FileEntity entity = mList.get(position);
                 if(entity.getFileType() == FileEntity.Type.FLODER){
                     currentFile = new File(entity.getFilePath());
-                    getData(entity.getFilePath());
+                    getData(entity.getFilePath(),false);
+                    selectPosList.add(position+"_"+entity.getFilePath());
                 }else if(entity.getFileType() == FileEntity.Type.FILE){
 
                     runOnUiThread(new Runnable() {
@@ -154,6 +210,7 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
                             }else{
                                 //根据后缀名判断文件格式
                                 boolean boo = FileUtil.isText(path);
+                                boo = true;
                                 if(boo) {
                                     Intent intent = new Intent(FileListActivity.this, EditorActivity.class);
                                     intent.setAction(Intent.ACTION_VIEW);
@@ -177,16 +234,16 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
 
                 final FileEntity entity = mList.get(position);
                 if(entity.getFileType() == FileEntity.Type.FLODER){
-                    aaa();
+                    modifyDirFilesSuffix(entity.getFilePath());
                 }
                 return true;
             }
         });
     }
 
-    private void aaa(){
+    private void modifyDirFilesSuffix(String dirPath){
         //提醒
-        final DialogFragmentChangeSuffix dialogFragmentChangeSuffix = DialogFragmentChangeSuffix.newInstance("");
+        final DialogFragmentChangeSuffix dialogFragmentChangeSuffix = DialogFragmentChangeSuffix.newInstance(dirPath);
         dialogFragmentChangeSuffix.setCreditExchangeInf(new DialogFragmentChangeSuffix.CreditExchangeInf() {
             @Override
             public void exchange(boolean isNotify) {
@@ -200,13 +257,13 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
         dialogFragmentChangeSuffix.show(this.getSupportFragmentManager(),DialogFragmentChangeSuffix.class.getSimpleName());
     }
 
-    private void getData(final String path) {
+    private void getData(final String path,final boolean isBack) {
         new Thread(){
             @Override
             public void run() {
                 super.run();
 
-                findAllFiles(path);
+                findAllFiles(path,isBack);
             }
         }.start();
 
@@ -225,7 +282,7 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
      * 查找path地址下所有文件
      * @param path
      */
-    public void findAllFiles(String path) {
+    public void findAllFiles(String path,final boolean isBack) {
         mList.clear();
 
         if(path ==null ||path.equals("")){
@@ -241,7 +298,6 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
                 boolean isDirectory = files[i].isDirectory();
                 if(isDirectory ==true){
                     entity.setFileType(FileEntity.Type.FLODER);
-//                  entity.setFileName(files[i].getPath());
                 }else{
                     entity.setFileType(FileEntity.Type.FILE);
                 }
@@ -251,7 +307,11 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
                 mList.add(entity);
             }
         }
-        mHandler.sendEmptyMessage(1);
+
+        Message msg = new Message();
+        msg.obj = isBack;
+        msg.what = 1;
+        mHandler.sendMessage(msg);
 
     }
 

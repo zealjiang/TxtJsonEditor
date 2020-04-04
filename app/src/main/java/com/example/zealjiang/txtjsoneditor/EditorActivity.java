@@ -96,53 +96,38 @@ public class EditorActivity extends AppCompatActivity {
     }
 
     private void readFile(String uriPath){
-        if(TextUtils.isEmpty(uriPath))return;
 
-        Uri uri = Uri.parse(uriPath);//uri路径
-        filePath = FileUtil.getRealFilePath(this, uri);//获取文件绝对路径
-
-        String encode = null;
         try{
-            URL url = new File(filePath).toURI().toURL();
-            encode = FileUtil.getUrlEncode(url);
-        }catch (MalformedURLException e){
+            if(TextUtils.isEmpty(uriPath))return;
+
+            Uri uri = Uri.parse(uriPath);//uri路径
+            filePath = FileUtil.getRealFilePath(this, uri);//获取文件绝对路径
+
+            String encode = null;
+            try{
+                URL url = new File(filePath).toURI().toURL();
+                encode = FileUtil.getUrlEncode(url);
+            }catch (MalformedURLException e){
+                e.printStackTrace();
+            }
+
+            String content = "";
+            if(TextUtils.isEmpty(encode)){
+                //读取文件内容
+                content = FileUtil.convertCodeAndGetText(filePath);
+            }else {
+                //读取文件内容
+                content = FileIOUtils.readFile2String(filePath,encode);
+            }
+
+            //如果显示的内容是json,格式化content
+            content = JsonUtil.formatJson(content);
+            //显示
+            tvContent.setText(content);
+            contentOld = content;
+        }catch (Exception e){
             e.printStackTrace();
         }
-
-        String content = "";
-        if(TextUtils.isEmpty(encode)){
-            //读取文件内容
-            content = FileUtil.convertCodeAndGetText(filePath);
-        }else {
-            //读取文件内容
-            content = FileIOUtils.readFile2String(filePath,encode);
-        }
-
-        //如果显示的内容是json,格式化content
-        content = JsonUtil.formatJson(content);
-        //显示
-        tvContent.setText(content);
-        contentOld = content;
-
-/*                try {
-                String fileName= FileUtil.getFileName(filePath);
-                InputStream in = this.getContentResolver().openInputStream(uri);//io
-                FileOutputStream out = new FileOutputStream(new File(path));//文件输出到开发app路径
-                byte[] b = new byte[1024];
-                try {
-                    while ((in.read(b)) != -1) {
-                        out.write(b);
-                    }
-                    in.close();
-                    out.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-            }*/
-
-
     }
 
     @Override

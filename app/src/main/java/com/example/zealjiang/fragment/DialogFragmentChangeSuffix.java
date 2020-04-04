@@ -1,6 +1,7 @@
 package com.example.zealjiang.fragment;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,7 +18,14 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.zealjiang.MyApplication;
 import com.example.zealjiang.txtjsoneditor.R;
+import com.example.zealjiang.util.FileUtil;
 import com.example.zealjiang.util.ScreenUtils;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * 批量修改后缀
@@ -107,12 +115,42 @@ public class DialogFragmentChangeSuffix extends DialogFragment {
                     creditExchangeInf.exchange(false);
                 }
 
+                String suffix = etSuffix.getText().toString();
+                if(TextUtils.isEmpty(suffix))return;
 
+                changeDirSuffix(suffix);
                 close();
             }
         });
 
     }
+
+    /**
+     * 修改后缀名
+     * @param suffix
+     */
+    private void changeDirSuffix(String suffix){
+        if(TextUtils.isEmpty(fileDirPath))return;
+        File fileDir = new File(fileDirPath);
+        if(!fileDir.exists() || !fileDir.isDirectory())return;
+
+
+        File[] files = fileDir.listFiles();
+        if (files == null || files.length==0) {
+            return;
+        }
+
+        for (File f: files) {
+            if(f.isFile()) {
+                String fileName = f.getName();
+                fileName = FileUtil.getFileNameNoEx(fileName);
+                if(TextUtils.isEmpty(fileName))continue;
+                f.renameTo(new File(fileDir,fileName+"."+suffix));
+            }
+        }
+
+    }
+
 
     private void init(){
 
