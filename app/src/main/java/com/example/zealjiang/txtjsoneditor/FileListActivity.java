@@ -27,6 +27,7 @@ import com.example.zealjiang.MyApplication;
 import com.example.zealjiang.bean.FileEntity;
 import com.example.zealjiang.fragment.DialogFragmentChangeSuffix;
 import com.example.zealjiang.util.FileUtil;
+import com.example.zealjiang.util.PIcFilterUtil;
 import com.example.zealjiang.util.PermissionUtil;
 import com.example.zealjiang.util.log.XLog;
 
@@ -138,6 +139,9 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
         if(boo){
             getData(sdRootPath,false);
         }
+
+
+        PIcFilterUtil.toGrayscale(null);
     }
 
     @Override
