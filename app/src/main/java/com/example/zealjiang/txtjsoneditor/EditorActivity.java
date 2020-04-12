@@ -9,11 +9,15 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.blankj.utilcode.util.FileIOUtils;
+import com.blankj.utilcode.util.ToastUtils;
+import com.example.zealjiang.MyApplication;
 import com.example.zealjiang.util.FileUtil;
 import com.example.zealjiang.util.JsonUtil;
 import com.example.zealjiang.util.PermissionUtil;
+import com.example.zealjiang.util.log.XLog;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -101,7 +105,13 @@ public class EditorActivity extends AppCompatActivity {
             if(TextUtils.isEmpty(uriPath))return;
 
             Uri uri = Uri.parse(uriPath);//uri路径
-            filePath = FileUtil.getRealFilePath(this, uri);//获取文件绝对路径
+            filePath = FileUtil.getPath(this, uri);//获取文件绝对路径
+            XLog.debug("mtest","readFile  filePath: "+filePath);
+            if(filePath == null){
+                //ToastUtils.showShort("找不到文件");
+                Toast.makeText(MyApplication.getContext(),"找不到文件",Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             String encode = null;
             try{
