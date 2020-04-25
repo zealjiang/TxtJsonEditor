@@ -237,7 +237,7 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
 
                 final FileEntity entity = mList.get(position);
                 if(entity.getFileType() == FileEntity.Type.FLODER){
-                    //modifyDirFilesSuffix(entity.getFilePath());
+                    modifyDirFilesSuffix(entity.getFilePath());
                     //mergeFile(entity.getFilePath());  //
                 }
                 return true;
