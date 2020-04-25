@@ -140,8 +140,6 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
             getData(sdRootPath,false);
         }
 
-
-        PIcFilterUtil.toGrayscale(null);
     }
 
     @Override
