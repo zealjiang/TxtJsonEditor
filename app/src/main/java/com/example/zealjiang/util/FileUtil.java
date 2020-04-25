@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import com.example.zealjiang.util.log.XLog;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,8 +15,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import info.monitorenter.cpdetector.io.ASCIIDetector;
 import info.monitorenter.cpdetector.io.ByteOrderMarkDetector;
@@ -59,6 +67,8 @@ public class FileUtil {
             }
         } else if ("file".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();
+        }else{
+            return uri.toString();
         }
         return null;
     }
@@ -261,5 +271,96 @@ public class FileUtil {
             }
         }
         return "";
+    }
+
+    public static void appendContentToFile(ArrayList<String> needAddFilePathList, String outFilePath){
+        if(needAddFilePathList == null || needAddFilePathList.size() == 0)return;
+        if(TextUtils.isEmpty(outFilePath))return;
+
+        RandomAccessFile raf = null;
+        try {
+
+            raf = new RandomAccessFile(outFilePath,"rw");
+
+            for (int i = 0; i < needAddFilePathList.size(); i++) {
+                String filePath = needAddFilePathList.get(i);
+                XLog.debug("mtest"," write to master filePath: "+filePath);
+                if(TextUtils.isEmpty(filePath))continue;
+                File needAddFile = new File(filePath);
+                if(needAddFile == null || !needAddFile.exists() || !needAddFile.isFile())return;
+
+
+                long length =  raf.length();
+                raf.seek(length);
+
+                FileInputStream bis = new FileInputStream(needAddFile);
+                // 指定文件位置读取的文件流
+                InputStream sbs = new BufferedInputStream(bis);
+
+                byte buffer[] = new byte[4 * 1024];
+                int len = 0;
+                while ((len = sbs.read(buffer)) != -1)//
+                {
+                    raf.write(buffer, 0, len);
+                }
+            }
+
+
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            try {
+                raf.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    /**
+     * 排序
+     */
+    public static List<String> sortBean(List<String> listBean){
+
+        if(listBean.size() == 0) {
+            return listBean;
+        }
+        //新的排序没有排序文件
+        Collections.sort(listBean, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+
+                try{
+                    int separator1 = o1.lastIndexOf(File.separator);
+                    int separator2 = o2.lastIndexOf(File.separator);
+                    String o1Name = o1.substring(separator1+1);
+                    String o2Name = o2.substring(separator2+1);
+
+                    int value = Integer.valueOf(o1Name) - Integer.valueOf(o2Name);//o1Name.compareTo(o2Name);
+                    if(value > 0){
+                        value = 1;
+                    }else if(value < 0){
+                        value = -1;
+                    }else if(value == 0){
+                        value = 0;
+                    }
+
+
+                    return value;
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                    return o1.compareTo(o2);
+                }
+
+            }
+        });
+        return listBean;
     }
 }

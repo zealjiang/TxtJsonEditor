@@ -25,6 +25,7 @@ import com.bumptech.glide.Glide;
 import com.example.zealjiang.HandleDataListView;
 import com.example.zealjiang.MyApplication;
 import com.example.zealjiang.bean.FileEntity;
+import com.example.zealjiang.fragment.DialogFragmenFileMerge;
 import com.example.zealjiang.fragment.DialogFragmentChangeSuffix;
 import com.example.zealjiang.util.FileUtil;
 import com.example.zealjiang.util.PIcFilterUtil;
@@ -236,13 +237,18 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
 
                 final FileEntity entity = mList.get(position);
                 if(entity.getFileType() == FileEntity.Type.FLODER){
-                    modifyDirFilesSuffix(entity.getFilePath());
+                    //modifyDirFilesSuffix(entity.getFilePath());
+                    //mergeFile(entity.getFilePath());  //
                 }
                 return true;
             }
         });
     }
 
+    /**
+     * 多个片段文件合成一个文件
+     * @param dirPath
+     */
     private void modifyDirFilesSuffix(String dirPath){
         //提醒
         final DialogFragmentChangeSuffix dialogFragmentChangeSuffix = DialogFragmentChangeSuffix.newInstance(dirPath);
@@ -257,6 +263,22 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
             }
         });
         dialogFragmentChangeSuffix.show(this.getSupportFragmentManager(),DialogFragmentChangeSuffix.class.getSimpleName());
+    }
+
+    private void mergeFile(String dirPath){
+        //提醒
+        final DialogFragmenFileMerge dialogFragmenFileMerge = DialogFragmenFileMerge.newInstance(dirPath);
+        dialogFragmenFileMerge.setCreditExchangeInf(new DialogFragmenFileMerge.CreditExchangeInf() {
+            @Override
+            public void exchange(boolean isNotify) {
+
+            }
+            @Override
+            public void cancel() {
+
+            }
+        });
+        dialogFragmenFileMerge.show(this.getSupportFragmentManager(),DialogFragmentChangeSuffix.class.getSimpleName());
     }
 
     private void getData(final String path,final boolean isBack) {

@@ -1,0 +1,188 @@
+package com.example.zealjiang.fragment;
+
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+
+import com.example.zealjiang.MyApplication;
+import com.example.zealjiang.txtjsoneditor.R;
+import com.example.zealjiang.util.FileUtil;
+import com.example.zealjiang.util.ScreenUtils;
+import com.example.zealjiang.util.log.XLog;
+
+import java.io.File;
+import java.util.ArrayList;
+
+/**
+ * 批量修改后缀
+ */
+public class DialogFragmenFileMerge extends DialogFragment {
+
+    private final String TAG = "DialogFragmentConsumeCredit";
+    private TextView tvCancel;
+    private TextView tvConfirm;
+    private EditText etSuffix;
+
+    private String fileDirPath;
+
+
+    public static DialogFragmenFileMerge newInstance(String fileDirPath) {
+        Bundle args = new Bundle();
+        args.putSerializable("fileDirPath", fileDirPath);
+        DialogFragmenFileMerge fragment = new DialogFragmenFileMerge();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    public void setData(){
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setStyle(DialogFragment.STYLE_NO_FRAME, R.style.DialogCredit);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        //设置显示的大小
+        Window win = getDialog().getWindow();
+        WindowManager.LayoutParams params = win.getAttributes();
+        int margin = ScreenUtils.dipConvertPx(MyApplication.getContext(),10);
+        int screenWidth = ScreenUtils.getScreenWidth(MyApplication.getContext());
+
+        params.width =  screenWidth - margin * 2;
+        //params.height = height;
+
+        //底边距
+        int marginBottom = margin;
+        params.y = marginBottom;
+        //params.gravity = Gravity.BOTTOM;
+        win.setAttributes(params);
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.dialog_change_suffix, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        if (getArguments() != null) {
+            fileDirPath = getArguments().getString("fileDirPath");
+        }
+
+        tvCancel = view.findViewById(R.id.tvCancel);
+        tvConfirm = view.findViewById(R.id.tvConfirm);
+        etSuffix = view.findViewById(R.id.etSuffix);
+
+
+        setListener();
+        init();
+    }
+
+    private void setListener(){
+        tvCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                close();
+            }
+        });
+
+        tvConfirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(creditExchangeInf != null){
+                    creditExchangeInf.exchange(false);
+                }
+
+
+                changeDirSuffix("");
+                close();
+            }
+        });
+
+    }
+
+    /**
+     * 合并文件
+     * @param suffix
+     */
+    private void changeDirSuffix(String suffix){
+        if(TextUtils.isEmpty(fileDirPath))return;
+        File fileDir = new File(fileDirPath);
+        if(!fileDir.exists() || !fileDir.isDirectory())return;
+
+
+        File[] files = fileDir.listFiles();
+        if (files == null || files.length==0) {
+            return;
+        }
+
+        ArrayList<String> needAddFileList = new ArrayList<>();
+        for (File f: files) {
+            if(f.isFile()) {
+                String fileName = f.getName();
+                if(TextUtils.isEmpty(fileName))continue;
+                try{
+                    int fileNameNum = Integer.valueOf(fileName);
+                    XLog.debug("mtest"," fileNameNum: "+fileNameNum);
+                    if(fileNameNum >= 0 && fileNameNum < 30){
+                        needAddFileList.add(fileDirPath+File.separator+fileName);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                    continue;
+                }
+            }
+        }
+
+        //按名称排序
+        FileUtil.sortBean(needAddFileList);
+
+        FileUtil.appendContentToFile(needAddFileList,fileDirPath+File.separator+"merge.mp4");
+
+    }
+
+
+    private void init(){
+
+
+    }
+
+    public void close(){
+
+        DialogFragmenFileMerge.this.dismiss();
+    }
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+    private CreditExchangeInf creditExchangeInf;
+    public interface CreditExchangeInf{
+        public void exchange(boolean isNotify);
+        public void cancel();
+    }
+
+    public void setCreditExchangeInf(CreditExchangeInf creditExchangeInf){
+        this.creditExchangeInf = creditExchangeInf;
+    }
+}
