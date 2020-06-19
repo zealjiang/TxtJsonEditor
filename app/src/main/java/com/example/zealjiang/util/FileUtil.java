@@ -3,9 +3,14 @@ package com.example.zealjiang.util;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.Environment;
+import android.os.StatFs;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 
+import com.example.zealjiang.MyApplication;
 import com.example.zealjiang.util.log.XLog;
 
 import java.io.BufferedInputStream;
@@ -19,7 +24,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -38,6 +45,135 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
 public class FileUtil {
 
 
+    public static File getCacheDir(String dirName) {
+        File result;
+        if (existsSdcard()) {
+            File cacheDir = MyApplication.getContext().getExternalFilesDir("res");
+            if (cacheDir == null) {
+                result = new File(Environment.getExternalStorageDirectory(),
+                        "Android/data/" + MyApplication.getContext().getPackageName() + "/res/" + dirName);
+            } else {
+                result = new File(cacheDir, dirName);
+            }
+
+            if (!result.exists() && !result.mkdirs()) {
+                result = new File(MyApplication.getContext().getCacheDir(), dirName);
+            }
+        } else {
+            result = new File(MyApplication.getContext().getCacheDir(), dirName);
+        }
+        if (result.exists() || result.mkdirs()) {
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    public static File getFileDir(String dirName) {
+        File result;
+        String parentDir;
+        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
+                || !Environment.isExternalStorageRemovable()) {
+            File file = MyApplication.getContext().getExternalFilesDir(null);
+            if(file != null){
+                parentDir = file.getPath();
+            }else{
+                parentDir = new File(Environment.getExternalStorageDirectory(),
+                        "Android/data/" + MyApplication.getContext().getPackageName() + "/files/").getPath();
+            }
+        } else {
+            parentDir = MyApplication.getContext().getFilesDir().getPath();
+        }
+        result = new File(parentDir, dirName);
+        if (result.exists() || result.mkdirs()) {
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    public static File getKeyfilesDir(String dirName) {
+        File result;
+        if (existsSdcard()) {
+            File cacheDir = MyApplication.getContext().getExternalFilesDir("keyfiles");
+            if (cacheDir == null) {
+                result = new File(Environment.getExternalStorageDirectory(),
+                        "Android/data/" + MyApplication.getContext().getPackageName() + "/keyfiles/" + dirName);
+            } else {
+                result = new File(cacheDir, dirName);
+            }
+
+            if (!result.exists() && !result.mkdirs()) {
+                result = new File(MyApplication.getContext().getFilesDir(), "/keyfiles/" + dirName);
+            }
+        } else {
+            result = new File(MyApplication.getContext().getFilesDir(), "/keyfiles/" + dirName);
+        }
+        if (result.exists() || result.mkdirs()) {
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    public static boolean saveFile(String response,String dirPath,String dirName,String fileName){
+        //保存数据到本地
+        if(TextUtils.isEmpty(response) || TextUtils.isEmpty(fileName))return false;
+        if (TextUtils.isEmpty(dirPath)) {
+            if(TextUtils.isEmpty(dirName))return false;
+            dirPath = MaterialManager.getDir(dirName);
+        }
+        if (TextUtils.isEmpty(dirPath)) {
+            ToastUtil.showToastCenter("保存失败，文件路径不存在");
+            return false;
+        }else{
+            if(!TextUtils.isEmpty(response)){
+                File file = new File(dirPath, fileName);
+
+
+                //创建文件夹
+                FileUtil.createDir(dirPath);
+                //缓存结果到本地文件
+                FileUtil.writeSDFile(file, response);
+            }
+        }
+        return false;
+    }
+
+    public static String readFile(String dirPath,String fileName){
+        if (TextUtils.isEmpty(dirPath) || TextUtils.isEmpty(fileName))return "";
+        //从缓存文件中读取数据
+        File file = new File(dirPath,fileName);
+        if(file.exists()) {
+            String response = FileUtil.readSDFile(file);
+            return response;
+        }
+        return "";
+    }
+
+
+    public static boolean existFile(String filename) {
+        if (TextUtils.isEmpty(filename)) {
+            return false;
+        }
+        File file = new File(filename);
+        if (file.exists()) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean existFolder(String fileFolder) {
+        if (TextUtils.isEmpty(fileFolder)) {
+            return false;
+        }
+        File file = new File(fileFolder);
+        if (file.isDirectory()) {
+            return true;
+        }
+        return false;
+    }
+
     public static String getRealFilePath(final Context context, final Uri uri ) {
         if ( null == uri ) return null;
         final String scheme = uri.getScheme();
@@ -53,17 +189,607 @@ public class FileUtil {
         return data;
     }
 
+    /**
+     * 检查磁盘空间是否大于10mb
+     *
+     * @return true 大于
+     */
+    public static boolean isDiskAvailable() {
+        long size = getDiskAvailableSize();
+        return size > 10 * 1024 * 1024; // > 10bm
+    }
+
+    /**
+     * 获取磁盘可用空间
+     *
+     * @return byte 单位 kb
+     */
+    public static long getDiskAvailableSize() {
+        if (!existsSdcard()) return 0;
+        File path = Environment.getExternalStorageDirectory(); // 取得sdcard文件路径
+        StatFs stat = new StatFs(path.getAbsolutePath());
+        long blockSize = stat.getBlockSize();
+        long availableBlocks = stat.getAvailableBlocks();
+        return availableBlocks * blockSize;
+        // (availableBlocks * blockSize)/1024 KIB 单位
+        // (availableBlocks * blockSize)/1024 /1024 MIB单位
+    }
+
+    public static Boolean existsSdcard() {
+        return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
+    }
+
+    public static long getFileOrDirSize(File file) {
+        if (!file.exists()) return 0;
+        if (!file.isDirectory()) return file.length();
+
+        long length = 0;
+        File[] list = file.listFiles();
+        if (list != null) { // 文件夹被删除时, 子文件正在被写入, 文件属性异常返回null.
+            for (File item : list) {
+                length += getFileOrDirSize(item);
+            }
+        }
+
+        return length;
+    }
+
+    public static String getFileNameWithoutExtension(File file) {
+        if (file == null) return "";
+
+        String fileName = file.getName();
+        int pos = fileName.lastIndexOf(".");
+        if (pos > 0) {
+            return fileName.substring(0, pos);
+        }
+
+        return "";
+    }
+
+    public static String getFileNameWithoutExtension(String fileName) {
+        if (fileName == null) return "";
+        if ( TextUtils.isEmpty(fileName) ) return "";
+
+        int pos = fileName.lastIndexOf(".");
+        if (pos > 0) {
+            return fileName.substring(0, pos);
+        }
+
+        return "";
+    }
+
+    /**
+     *
+     * @param url  "http://se.360.cn/hv/ios/opening/videozip/kuaishipin_opening.zip"
+     * @return kuaishipin_opening.zip
+     */
+    public static String getFileNameByUrl(String url) {
+        if (TextUtils.isEmpty(url)) return "";
+        //if (!url.contains("/")) return "";
+        int pos = url.lastIndexOf("/");
+        if (pos > 0 && url.length()>pos+1) {
+            return url.substring(pos+1);
+        }else{
+            return url;
+        }
+    }
+
+    /**
+     * 获取不带扩展名的文件名
+     */
+    public static String getFileNameNoEx(String filename) {
+        if ((filename != null) && (filename.length() > 0)) {
+            int dot = filename.lastIndexOf('.');
+            if ((dot >-1) && (dot < (filename.length()))) {
+                return filename.substring(0, dot);
+            }
+        }
+        return filename;
+    }
+
+    /**
+     * 获取扩展名
+     * @return
+     */
+    public static String getFileNameExtension(String filename) {
+        if ((filename != null) && (filename.length() > 0)) {
+            int pos = filename.lastIndexOf('.');
+            if (pos > 0) {
+                return filename.substring(pos);
+            }
+        }
+        return "";
+    }
+
+    /**
+     * 获取文件的扩展名
+     * @param file
+     * @return
+     */
+    public static String getFileExtension(File file) {
+        if (file == null) return "";
+
+        String fileName = file.getName();
+        int pos = fileName.lastIndexOf(".");
+        if (pos > 0) {
+            return fileName.substring(pos);
+        }
+
+        return "";
+    }
+
+    /**
+     * 获取文件的扩展名
+     * @param filePath
+     * @return
+     */
+    public static String getFileExtension(String filePath) {
+        if (TextUtils.isEmpty(filePath)) return "";
+
+        int pos = filePath.lastIndexOf(".");
+        if (pos > 0) {
+            return filePath.substring(pos);
+        }
+
+        return "";
+    }
+
+    public static boolean isZip(String zipFilePath){
+        if(TextUtils.isEmpty(zipFilePath))return false;
+        String ex = getFileNameExtension(zipFilePath);
+        if(TextUtils.isEmpty(ex))return false;
+        ex = ex.substring(1);//去掉.
+        if("rar".equals(ex) || "zip".equals(ex)){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 删除文件，可以是单个文件或文件夹
+     *
+     * @param fileName 待删除的文件名
+     * @return 文件删除成功返回true, 否则返回false
+     */
+    public static boolean delete(String fileName) {
+        File file = new File(fileName);
+        if (!file.exists()) {
+            return false;
+        } else {
+            if (file.isFile()) {
+
+                return deleteFile(fileName);
+            } else {
+                return deleteDirectory(fileName);
+            }
+        }
+    }
+
+    /**
+     * 删除单个文件
+     *
+     * @param fileName 被删除文件的文件名
+     * @return 单个文件删除成功返回true, 否则返回false
+     */
+    private static boolean deleteFile(String fileName) {
+        File file = new File(fileName);
+        if (file.isFile() && file.exists()) {
+            file.delete();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * 删除目录（文件夹）以及目录下的文件
+     *
+     * @param dir 被删除目录的文件路径
+     * @return 目录删除成功返回true, 否则返回false
+     */
+    private static boolean deleteDirectory(String dir) {
+        //如果dir不以文件分隔符结尾，自动添加文件分隔符
+        if (!dir.endsWith(File.separator)) {
+            dir = dir + File.separator;
+        }
+        File dirFile = new File(dir);
+        //如果dir对应的文件不存在，或者不是一个目录，则退出
+        if (!dirFile.exists() || !dirFile.isDirectory()) {
+            return false;
+        }
+        boolean flag = true;
+        //删除文件夹下的所有文件(包括子目录)
+        File[] files = dirFile.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            //删除子文件
+            if (files[i].isFile()) {
+                flag = deleteFile(files[i].getAbsolutePath());
+                if (!flag) {
+                    break;
+                }
+            }
+            //删除子目录
+            else {
+                flag = deleteDirectory(files[i].getAbsolutePath());
+                if (!flag) {
+                    break;
+                }
+            }
+        }
+
+        if (!flag) {
+            return false;
+        }
+
+        //删除当前目录
+        if (dirFile.delete()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static ArrayList<String> getAllFileNamesList(String fileDir) {
+        ArrayList<String> list = new ArrayList<>();
+        File file = new File(fileDir);
+        if (!file.isDirectory()) {
+            return null;
+        }
+        String[] names = file.list();
+        if (names != null) {
+            list.addAll(Arrays.asList(names));
+            return list;
+        }
+        return null;
+
+    }
+
+    /**
+     * 判断指定的dir目录是否为空，为空或不存在返回true，不为空返回false
+     * @param dir
+     * @return
+     */
+    public static boolean isFileDirEmpty(String dir){
+        if(TextUtils.isEmpty(dir)){
+            return true;
+        }
+        File file = new File(dir);
+        if(!file.exists()){
+            return true;
+        }
+        if (!file.isDirectory()) {
+            return true;
+        }
+        if(file.listFiles().length == 0){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 返回指定目录下所有文件名称列表，不包含子目录下的文件
+     * @param fileDir
+     * @return
+     */
+    public static ArrayList<String> getAllFilePathList(String fileDir) {
+        ArrayList<String> list = new ArrayList<>();
+        File file = new File(fileDir);
+        if (!file.isDirectory()) {
+            return null;
+        }
+        File[] files = file.listFiles();
+        if (files == null || files.length==0) {
+            return null;
+        }
+        //排序
+        List<File> fileList = Arrays.asList(files);
+        Collections.sort(fileList, new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                if (o1.isDirectory() && o2.isFile())
+                    return -1;
+                if (o1.isFile() && o2.isDirectory())
+                    return 1;
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+
+        for (File f: fileList) {
+            if(f.isFile()) {
+                list.add(f.getAbsolutePath());
+            }
+        }
+        return list;
+    }
+
+
+    public static void copy(String from, String to) {
+        if (TextUtils.isEmpty(from) || TextUtils.isEmpty(to)) return;
+
+        FileChannel input;
+        FileChannel output;
+
+        try {
+            input = new FileInputStream(new File(from)).getChannel();
+            output = new FileOutputStream(new File(to)).getChannel();
+            output.transferFrom(input, 0, input.size());
+
+            input.close();
+            output.close();
+        } catch (Exception e) {
+        }
+    }
+
+
+    public static boolean isIllegal(File file) {
+        return file == null || !file.exists();
+    }
+
+    public static String readSDFile(File file) {
+        String res = "";
+        FileInputStream fis;
+        try {
+            if(file != null){
+                fis = new FileInputStream(file);
+                int length = fis.available();
+                byte[] buffer = new byte[length];
+                fis.read(buffer);
+                res = new String(buffer, "UTF-8");
+                fis.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return res;
+    }
+
+    public static boolean isWebp(File file) {
+        FileInputStream fis;
+        try {
+            fis = new FileInputStream(file);
+            byte[] buffer = new byte[16];
+            fis.read(buffer);
+            fis.close();
+
+            if (buffer[8] == 0x57 && buffer[9] == 0x45 && buffer[10] == 0x42 && buffer[11] == 0x50) {
+                return true;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public static void writeSDFile(File file, String content) {
+        FileOutputStream fos;
+        try {
+            fos = new FileOutputStream(file);
+            byte[] bytes = content.getBytes();
+            fos.write(bytes);
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 创建 文件夹
+     * @param dirPath 文件夹路径
+     * @return 创建成功返回true,失败返回false
+     */
+    public static boolean createDir(String dirPath) {
+
+        File dir = new File(dirPath);
+        //文件夹是否已经存在
+        if (dir.exists()) {
+            return true;
+        }
+        //创建文件夹
+        if (dir.mkdirs()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static void sort(List<File> list) {
+        if (list == null || list.size() == 0) return;
+        try {
+            Collections.sort(list, new FileComparator());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static class FileComparator implements Comparator<File> {
+        public int compare(File file1, File file2) {
+            if (file1.lastModified() > file2.lastModified()) {
+                return -1;
+            } else if (file1.lastModified() < file2.lastModified()) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    /**
+     * 判断是图片文件还是视频文件
+     * @param path
+     * @return 图片返回"pic",视频返回"video"
+     */
+    public static String isPicOrVideo(String path){
+        String suffix = null;
+        if(TextUtils.isEmpty(path)){
+            return "";
+        }
+        if (!path.contains(".")) {
+            return "";
+        }
+        int pos = path.lastIndexOf(".");
+        if (pos > 0 && path.length()>pos+1) {
+            suffix = path.substring(pos+1);
+        }
+        try {
+            suffix = suffix.toUpperCase();
+        }catch (Exception e){
+            e.printStackTrace();
+            return "";
+        }
+        //判断是否是图片
+        //JPEG、TIFF、RAW、BMP、GIF、PNG
+        String[] picSuffixArray = {"JPEG","JPG","TIFF","RAW","BMP","GIF","PNG"};
+        List<String> picList = Arrays.asList(picSuffixArray);
+        if(picList.contains(suffix)){
+            return "pic";
+        }
+        //判断是否是视频
+        //wmv、asf、asx、rm、 rmvb、mp4、3gp、mov、m4v、avi、dat、mkv、flv、vob
+        String[] videoSuffixArray = {"WMV","ASF","ASX","RM","RMVB","MP4","3GP","MOV","M4V","AVI","DAT","MKV","FLV","VOB","WEBM"};
+        List<String> videoList = Arrays.asList(videoSuffixArray);
+        if(videoList.contains(suffix)){
+            return "video";
+        }
+        return "other";
+    }
+
+    public static FileTypeEnum getFileType(String path){
+        String type = isPicOrVideo(path);
+        if("pic".equals(type)){
+            return FileTypeEnum.PIC;
+        }else if("video".equals(type)){
+            return FileTypeEnum.VIDEO;
+        }else if("other".equals(type)){
+            return FileTypeEnum.OTHER;
+        }else{
+            return FileTypeEnum.OTHER;
+        }
+    }
+
+    public static String getUniqueFilePath(String path, String shortName) {
+        final File dir = new File(path);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        // normalized, exist '/' in front of shortname
+
+        File nor = new File(path, shortName);
+        String s = nor.getName();
+
+        int num = 0;
+        final String ext = _getFileExtension(s);
+        final String name = _getFileTitle(s);
+        File file = new File(path, s);
+        while (file.exists()) {
+            num++;
+            file = new File(path, name + "-" + num + ext);
+        }
+
+        String result = file.getAbsolutePath();
+        return result;
+    }
+
+    private static String _getFileExtension(final String path) {
+        if (path != null && path.lastIndexOf('.') != -1) {
+            return path.substring(path.lastIndexOf('.'));
+        }
+        return null;
+    }
+
+    private static String _getFileTitle(String shortName) {
+        return shortName.substring(0, shortName.lastIndexOf('.'));
+    }
+
+    public enum FileTypeEnum {
+        /**
+         * 压缩文件
+         */
+        ZIP(0,"压缩文件"),
+        /**
+         * 图片
+         */
+        PIC(1,"PIC"),
+        /**
+         * 视频
+         */
+        VIDEO(2,"VIDEO"),
+        /**
+         * 未知
+         */
+        OTHER(99,"UN_KNOWN");
+
+        public int id;
+        public String name;
+
+        // 定义一个带参数的构造器，枚举类的构造器只能使用 private 修饰
+        FileTypeEnum(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+    }
+
+    public static FileMsg getFileMsg(String mUri) {
+        long duration = 0;
+        android.media.MediaMetadataRetriever mmr = new android.media.MediaMetadataRetriever();
+
+        FileMsg fileMsg = new FileMsg();
+        try {
+            if (mUri != null) {
+                mmr.setDataSource(mUri);
+            }
+
+            duration = Long.parseLong(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+            int width = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+            int height = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+            if (width == 0 || height == 0) {
+                duration = 0;
+            }
+            XLog.error("LightVideoHelper","width=" + width
+                    + " height=" + height
+                    + " duration=" + duration
+            );
+
+            fileMsg.duration = duration;
+            fileMsg.width = width;
+            fileMsg.height = height;
+        } catch (Exception ex) {
+            XLog.error("LightVideoHelper","Exception:" + ex);
+        } finally {
+            mmr.release();
+        }
+
+
+        return fileMsg;
+    }
+
+    public static class FileMsg{
+        public long duration;
+        public int width;
+        public int height;
+
+    }
+
     public static String getPath(Context context, Uri uri) {
         if ("content".equalsIgnoreCase(uri.getScheme())) {
-            String[] projection = {"_data"};
+            String[] projection = {MediaStore.MediaColumns.DATA};//{"_data"};
             Cursor cursor = null;
             try {
                 cursor = context.getContentResolver().query(uri, projection, null, null, null);
-                int column_index = cursor.getColumnIndexOrThrow("_data");
-                if (cursor.moveToFirst()) {
-                    return cursor.getString(column_index);
+                if (cursor != null) {
+                    if (cursor.moveToFirst()) {
+                        int column_index = cursor.getColumnIndexOrThrow(projection[0]);//"_data");
+                        if(column_index > -1) {
+                            return cursor.getString(column_index);
+                        }
+                    }
                 }
             } catch (Exception e) {
+                e.printStackTrace();
             }
         } else if ("file".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();
@@ -72,6 +798,34 @@ public class FileUtil {
         }
         return null;
     }
+
+    /**
+     * 将uri转换成真实路径
+     *
+     * @param selectedVideoUri
+     * @param contentResolver
+     * @return
+     */
+    public static String getFilePathFromContentUri(Uri selectedVideoUri,
+                                                   ContentResolver contentResolver) {
+        String filePath = "";
+        String[] filePathColumn = {MediaStore.MediaColumns.DATA};
+
+        Cursor cursor = contentResolver.query(selectedVideoUri, filePathColumn,
+                null, null, null);
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                int id = cursor.getColumnIndex(filePathColumn[0]);
+                if(id > -1)
+                    filePath = cursor.getString(id);
+            }
+            cursor.close();
+        }
+
+        return filePath;
+    }
+
 
 
     public static String getFileName(String path){
@@ -248,30 +1002,6 @@ public class FileUtil {
         return false;
     }
 
-    public static void writeSDFile(File file, String content) {
-        FileOutputStream fos;
-        try {
-            fos = new FileOutputStream(file);
-            byte[] bytes = content.getBytes();
-            fos.write(bytes);
-            fos.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * 获取不带扩展名的文件名
-     */
-    public static String getFileNameNoEx(String filename) {
-        if ((filename != null) && (filename.length() > 0)) {
-            int dot = filename.lastIndexOf('.');
-            if ((dot >-1) && (dot < (filename.length()))) {
-                return filename.substring(0, dot);
-            }
-        }
-        return "";
-    }
 
     public static void appendContentToFile(ArrayList<String> needAddFilePathList, String outFilePath){
         if(needAddFilePathList == null || needAddFilePathList.size() == 0)return;

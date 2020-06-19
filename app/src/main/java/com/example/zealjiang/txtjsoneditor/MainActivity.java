@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
         chooseFile();
 
         startActivity(new Intent(this,FileSearchActivity.class));
+
     }
 
     private void chooseFile() {

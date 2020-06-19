@@ -135,6 +135,13 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
         //Log.d("mtest"," sdRootPath: "+sdRootPath);
         initView();
 
+        //todo test
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         permissionUtil = new PermissionUtil();
         boolean boo = permissionUtil.checkPermission(this);
         if(boo){
@@ -177,6 +184,10 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
             @Override
             public void onClick(View v) {
                 Toast.makeText(MyApplication.getContext(),"email:zealjiang@126.com\nphone:18618269575",Toast.LENGTH_SHORT).show();
+
+                //test
+                UcToMp3Activity te = new UcToMp3Activity();
+                te.readFile();
             }
         });
 
@@ -239,6 +250,8 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
                 if(entity.getFileType() == FileEntity.Type.FLODER){
                     modifyDirFilesSuffix(entity.getFilePath());
                     //mergeFile(entity.getFilePath());  //
+                }else if(entity.getFileType() == FileEntity.Type.FILE){
+                    Toast.makeText(MyApplication.getContext(),"文件",Toast.LENGTH_SHORT).show();
                 }
                 return true;
             }
