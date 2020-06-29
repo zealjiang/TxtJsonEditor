@@ -265,7 +265,6 @@ public class FileUtil {
      */
     public static String getFileNameByUrl(String url) {
         if (TextUtils.isEmpty(url)) return "";
-        //if (!url.contains("/")) return "";
         int pos = url.lastIndexOf("/");
         if (pos > 0 && url.length()>pos+1) {
             return url.substring(pos+1);

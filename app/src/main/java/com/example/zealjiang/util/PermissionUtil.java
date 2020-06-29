@@ -24,6 +24,7 @@ public class PermissionUtil {
     static {
         permissionsSet.add(Manifest.permission.READ_EXTERNAL_STORAGE);
         permissionsSet.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        //permissionsSet.add(Manifest.permission.INTERNET);
     }
 
     public boolean checkPermission(Context mContext) {

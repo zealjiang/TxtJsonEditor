@@ -25,9 +25,14 @@ import com.bumptech.glide.Glide;
 import com.example.zealjiang.HandleDataListView;
 import com.example.zealjiang.MyApplication;
 import com.example.zealjiang.bean.FileEntity;
+import com.example.zealjiang.bean.Mp3ImjadInfoBean;
 import com.example.zealjiang.fragment.DialogFragmenFileMerge;
 import com.example.zealjiang.fragment.DialogFragmentChangeSuffix;
+import com.example.zealjiang.helper.UcToMp3Helper;
+import com.example.zealjiang.inf.Mp3ImjadInfoInf;
 import com.example.zealjiang.util.FileUtil;
+import com.example.zealjiang.util.MaterialManager;
+import com.example.zealjiang.util.MediaUtil;
 import com.example.zealjiang.util.PIcFilterUtil;
 import com.example.zealjiang.util.PermissionUtil;
 import com.example.zealjiang.util.log.XLog;
@@ -135,12 +140,6 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
         //Log.d("mtest"," sdRootPath: "+sdRootPath);
         initView();
 
-        //todo test
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         permissionUtil = new PermissionUtil();
         boolean boo = permissionUtil.checkPermission(this);
@@ -186,8 +185,32 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
                 Toast.makeText(MyApplication.getContext(),"email:zealjiang@126.com\nphone:18618269575",Toast.LENGTH_SHORT).show();
 
                 //test
-                UcToMp3Activity te = new UcToMp3Activity();
-                te.readFile();
+                //boolean boo = permissionUtil.checkPermission(FileListActivity.this);
+                //UcToMp3Helper ucToMp3Helper = new UcToMp3Helper(FileListActivity.this);
+                //ucToMp3Helper.readFile("/sdcard/1536558-160000-f6e3973a658886c5cae941c5443aa373.mp3.uc!");
+                //MediaUtil.getMedieInfo("/sdcard/1536558-160000-f6e3973a658886c5cae941c5443aa373.mp3.uc!");
+                //MediaUtil.getMedieInfo(MaterialManager.UC_MUSIC_DIR+"temp.mp3");
+
+
+/*                ucToMp3Helper.obtainMp3Info(null, "1536558", new Mp3ImjadInfoInf() {
+                    @Override
+                    public void onSuccess(Mp3ImjadInfoBean bean) {
+                        if(bean == null || bean.getSongs() == null || bean.getSongs().size() == 0)return;
+                        String title = bean.getSongs().get(0).getName();
+                        if(TextUtils.isEmpty(title)){
+                            XLog.debug("mtest","网络获取歌曲名失败");
+                            return;
+                        }
+
+                        String newTitle = "/sdcard/"+title+".mp3";
+                        (new File(MaterialManager.UC_MUSIC_DIR+"temp.mp3")).renameTo(new File(newTitle));
+                    }
+
+                    @Override
+                    public void onFailure(int code, String errMsg) {
+                        XLog.debug("mtest","网络获取歌曲名失败+"+errMsg);
+                    }
+                });*/
             }
         });
 
@@ -209,8 +232,6 @@ public class FileListActivity extends AppCompatActivity implements View.OnClickL
                         public void run() {
 /*                            Toast.makeText(mContext, entity.getFilePath()+"  "+entity.getFileName(),
                                     Toast.LENGTH_SHORT).show();*/
-
-
 
                             String path = entity.getFilePath();
                             if(TextUtils.isEmpty(path)){

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:id="@+id/layout_default_page_state_error_server"
+    >
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="@string/load_error"
+        android:textColor="#ffffff"
+        android:textSize="16dp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_title"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:text="@string/try_reload"
+        android:textColor="#80ffffff"
+        android:textSize="13dp" />
+
+    <TextView
+        android:id="@+id/tv_retry_action"
+        android:layout_width="108dp"
+        android:layout_height="32dp"
+        android:layout_below="@+id/tv_subtitle"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/shape_favorite_login_actionbt_bg"
+        android:gravity="center"
+        android:text="@string/click_retry"
+        android:textColor="#FA323C"
+        android:textSize="15dp" />
+
+
+</RelativeLayout>

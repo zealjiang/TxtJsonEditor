@@ -14,6 +14,7 @@ import android.widget.Toast;
 import com.blankj.utilcode.util.FileIOUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.example.zealjiang.MyApplication;
+import com.example.zealjiang.helper.UcToMp3Helper;
 import com.example.zealjiang.util.FileUtil;
 import com.example.zealjiang.util.JsonUtil;
 import com.example.zealjiang.util.PermissionUtil;
@@ -39,6 +40,8 @@ public class EditorActivity extends AppCompatActivity {
     EditText tvContent;
     @BindView(R.id.ivMore)
     ImageView ivMore;
+    @BindView(R.id.pageStateLayout)
+    com.example.zealjiang.view.PageStateLayout pageStateLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,17 +57,38 @@ public class EditorActivity extends AppCompatActivity {
         }
         String action = intent.getAction();
 
-        //将文件复制到制定目录中
         if(Intent.ACTION_VIEW.equals(action)) {
             String str = intent.getDataString();
             Log.e("uri", str);
             if (str != null) {
                 uriPath = str;
                 if(boo){
-                    readFile(str);
+                    //如果是网易缓存音乐
+                    String realPath = uriPathToRealPath(uriPath);
+                    if(realPath.endsWith(".mp3.uc!")){
+                        UcToMp3Helper ucToMp3Helper = new UcToMp3Helper(EditorActivity.this);
+                        ucToMp3Helper.readFile(pageStateLayout,realPath);
+                    }else{
+                        readFile(realPath);
+                    }
+
                 }
             }
         }
+    }
+
+    private String uriPathToRealPath(String uriPath){
+        if(TextUtils.isEmpty(uriPath))return "";
+
+        Uri uri = Uri.parse(uriPath);//uri路径
+        String filePath = FileUtil.getPath(this, uri);//获取文件绝对路径
+        XLog.debug("mtest","readFile  filePath: "+filePath);
+        if(filePath == null){
+            //ToastUtils.showShort("找不到文件");
+            Toast.makeText(MyApplication.getContext(),"找不到文件",Toast.LENGTH_SHORT).show();
+            return "";
+        }
+        return filePath;
     }
 
     @OnClick({R.id.ivMore})
@@ -99,10 +123,10 @@ public class EditorActivity extends AppCompatActivity {
         }
     }
 
-    private void readFile(String uriPath){
+    private void readFile(String filePath){
 
         try{
-            if(TextUtils.isEmpty(uriPath))return;
+/*            if(TextUtils.isEmpty(uriPath))return;
 
             Uri uri = Uri.parse(uriPath);//uri路径
             filePath = FileUtil.getPath(this, uri);//获取文件绝对路径
@@ -111,7 +135,7 @@ public class EditorActivity extends AppCompatActivity {
                 //ToastUtils.showShort("找不到文件");
                 Toast.makeText(MyApplication.getContext(),"找不到文件",Toast.LENGTH_SHORT).show();
                 return;
-            }
+            }*/
 
             String encode = null;
             try{

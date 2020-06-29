@@ -81,4 +81,11 @@ public class ToastUtil {
 		txtToast = null;
 	}
 
+	public static void sysToast(String content,int toastLength){
+		Toast.makeText(MyApplication.getContext(),"要解码的文件不存在",toastLength).show();
+	}
+
+	public static void sysToast(String content){
+		sysToast(content,Toast.LENGTH_SHORT);
+	}
 }
