@@ -1,8 +1,9 @@
 <component name="libraryTable">
   <library name="Gradle: com.zhy:base-adapter:2.0.1@aar">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../.gradle/caches/transforms-2/files-2.1/fcaaa5727942cca91d874a89138147ca/jetified-base-adapter-2.0.1/jars/classes.jar!/" />
-      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-2/files-2.1/fcaaa5727942cca91d874a89138147ca/jetified-base-adapter-2.0.1/res" />
+      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-2/files-2.1/af2bbcc2ea3b49152b8da8a31d1a4302/jetified-base-adapter-2.0.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/transforms-2/files-2.1/af2bbcc2ea3b49152b8da8a31d1a4302/jetified-base-adapter-2.0.1/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-2/files-2.1/af2bbcc2ea3b49152b8da8a31d1a4302/jetified-base-adapter-2.0.1/res" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$PROJECT_DIR$/../.gradle/caches/modules-2/files-2.1/com.zhy/base-adapter/2.0.1/37dfa6b6663c5e008f399c8f277cc045fc25bd97/base-adapter-2.0.1-javadoc.jar!/" />

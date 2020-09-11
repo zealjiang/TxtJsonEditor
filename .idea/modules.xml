@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/TxtJsonEditor.iml" filepath="$PROJECT_DIR$/TxtJsonEditor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TxtJsonEditor.iml" filepath="$PROJECT_DIR$/TxtJsonEditor.iml" group="TxtJsonEditor" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/TxtJsonEditor-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/TxtJsonEditor-app.iml" group="TxtJsonEditor/app" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

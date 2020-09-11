@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UcToMp3Helper {
@@ -45,6 +46,8 @@ public class UcToMp3Helper {
             + File.separator+"Lyric";
     private final String lyric = "Lyric";
     private final String dir = MaterialManager.UC_MUSIC_DIR;
+    private final int MaxSplitFileCount = 7;//为线程池核心数-1
+    private final long MaxSlipFileSize = 1024 * 1024 * 2;//2MB 每个分割的文件大小最大为2MB
 
 
     public UcToMp3Helper(Fragment fragement){
@@ -152,6 +155,9 @@ public class UcToMp3Helper {
         if (pageStateLayout != null) {
             pageStateLayout.showLoading();
         }
+
+        fileSplit(ucMusicPath);
+        if(true)return;//todo
 
         LibTaskController.run(new Runnable() {
             @Override
@@ -402,9 +408,53 @@ public class UcToMp3Helper {
         });
     }
 
-    private void bb(){
 
-    }
+    private void fileSplit(String path){
+        LibTaskController.run(new Runnable() {
+            @Override
+            public void run() {
+                //计算拆分文件的个数 读取文件的大小
+                if(TextUtils.isEmpty(path)){
+                    XLog.error("mtest","path 为空");
+                    return;
+                }
+
+                int count = FileUtil.getSplitCount(path,MaxSlipFileSize,MaxSplitFileCount);
+                if(count <= 0){
+                    XLog.error("mtest","要分隔的文件有误");
+                    return;
+                }
+                if(count == 1){
+                    //直接分解
+                }else{
+                    String tempDir = MaterialManager.UC_TEMP_MUSIC_DIR;
+
+                    File dir = new File(tempDir);
+                    if(dir.exists() && dir.listFiles() != null && dir.listFiles().length > 0){
+                        FileUtil.delete(tempDir);
+                    }
+                    ArrayList<String> fileList = FileUtil.splitFile(path,tempDir,count);
+                    if(fileList == null || fileList.isEmpty()){
+                        XLog.error("mtest","拆分的文件列表为空");
+                        return;
+                    }
+
+                    //多线程解码
+                    for (int i = 0; i < fileList.size(); i++) {
+                        LibTaskController.run(new Runnable() {
+                            @Override
+                            public void run() {
+
+                            }
+                        });
+                    }
+
+
+                }
+
+            }
+        });
+     }
 
     private void aa(String ucMusicPath){
         FileOutputStream fos = null;

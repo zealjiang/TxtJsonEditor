@@ -65,7 +65,7 @@ public class EditorActivity extends AppCompatActivity {
                 if(boo){
                     //如果是网易缓存音乐
                     String realPath = uriPathToRealPath(uriPath);
-                    if(realPath.endsWith(".mp3.uc!")){
+                    if(realPath.endsWith(".mp3.uc!") || realPath.endsWith(".mp3")){
                         UcToMp3Helper ucToMp3Helper = new UcToMp3Helper(EditorActivity.this);
                         ucToMp3Helper.readFile(pageStateLayout,realPath);
                     }else{

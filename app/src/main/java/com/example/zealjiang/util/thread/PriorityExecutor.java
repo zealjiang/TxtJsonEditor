@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PriorityExecutor implements Executor {
 
-    private static final int CORE_POOL_SIZE = 5;
+    private static final int CORE_POOL_SIZE = 8;
     private static final int MAXIMUM_POOL_SIZE = 256;
     private static final int KEEP_ALIVE = 1;
 

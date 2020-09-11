@@ -8,13 +8,10 @@ public class MaterialManager {
 
     /** 音乐 */
     public final static String UC_MUSIC_NAME="uc_music";
-    public final static String AI_SUBTITLE_NAME="ai_subtitle";
-    public final static String XUNFEI_SUBTITLE_NAME="xunfei_subtitle";
     public static String UC_MUSIC_DIR = getDir(UC_MUSIC_NAME);
-    //public static String AI_SUBTITLE_DIR = getDir(AI_SUBTITLE_NAME);
-    public final static String SUBTITLE_FILE = "file_subtitle.txt";//字幕资源文件
-    public static String SUBTITLE_WORDART_DIR = UC_MUSIC_NAME+"wordart"+ File.separator;//艺术字文件夹
-    public static String SUBTITLE_PROPERTY_DIR = UC_MUSIC_NAME+"property"+ File.separator;//字幕大小、位置、旋转信息文件夹
+    public final static String UC_TEMP_MUSIC_NAME="temp_music";
+    public static String UC_TEMP_MUSIC_DIR = UC_MUSIC_DIR+UC_TEMP_MUSIC_NAME+ File.separator;
+
 
     /** 贴图文件夹 */
     public final static String STICKER_NAME="sticker";
